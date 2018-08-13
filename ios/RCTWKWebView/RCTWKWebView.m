@@ -11,7 +11,9 @@
 #import <React/RCTUtils.h>
 #import <React/RCTView.h>
 #import <React/UIView+React.h>
-
+#import <TrustKit/TrustKit.h>
+#import <TrustKit/TSKPinningValidator.h>
+#import <TrustKit/TSKPinningValidatorCallback.h>
 #import <objc/runtime.h>
 
 // runtime trick to remove WKWebView keyboard default toolbar
@@ -448,12 +450,12 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 
 #pragma mark - WKNavigationDelegate methods
 
-#if DEBUG
 - (void)webView:(WKWebView *)webView didReceiveAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition, NSURLCredential * _Nullable))completionHandler {
-    NSURLCredential * credential = [[NSURLCredential alloc] initWithTrust:[challenge protectionSpace].serverTrust];
-    completionHandler(NSURLSessionAuthChallengeUseCredential, credential);
+    TSKPinningValidator *pinningValidator = [[TrustKit sharedInstance] pinningValidator];
+    if (![pinningValidator handleChallenge:challenge completionHandler:completionHandler]) {
+      completionHandler(NSURLSessionAuthChallengePerformDefaultHandling, nil);
+    }
 }
-#endif
 
 - (void)webView:(__unused WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler
 {
